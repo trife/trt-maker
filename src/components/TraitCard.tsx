@@ -25,11 +25,13 @@ const FORMAT_COLORS: Record<string, string> = {
 interface Props {
   trait: Trait
   index: number
+  isSelected: boolean
   onEdit: () => void
   onDelete: () => void
+  onToggleSelect: () => void
 }
 
-export function TraitCard({ trait, index, onEdit, onDelete }: Props) {
+export function TraitCard({ trait, index, isSelected, onEdit, onDelete, onToggleSelect }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: trait.id })
 
   const style = {
@@ -44,8 +46,18 @@ export function TraitCard({ trait, index, onEdit, onDelete }: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm hover:border-gray-300 hover:shadow"
+      className={`group flex items-center gap-3 rounded-lg border bg-white px-3 py-2.5 shadow-sm hover:border-gray-300 hover:shadow ${isSelected ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
     >
+      {/* Checkbox */}
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={onToggleSelect}
+        onClick={(e) => e.stopPropagation()}
+        className="h-4 w-4 rounded border-gray-300 text-blue-600 accent-blue-600 flex-shrink-0"
+        aria-label={`Select ${trait.name}`}
+      />
+
       {/* Drag handle */}
       <button
         {...attributes}

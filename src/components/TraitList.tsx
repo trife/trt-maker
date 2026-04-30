@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -18,16 +19,27 @@ import { TraitCard } from './TraitCard'
 
 interface Props {
   traits: Trait[]
+  selectedIds: Set<string>
   onReorder: (traits: Trait[]) => void
   onEdit: (trait: Trait) => void
   onDelete: (id: string) => void
+  onToggleSelect: (id: string) => void
+  onSelectAll: () => void
+  onBulkDelete: () => void
 }
 
-export function TraitList({ traits, onReorder, onEdit, onDelete }: Props) {
+export function TraitList({ traits, selectedIds, onReorder, onEdit, onDelete, onToggleSelect, onSelectAll, onBulkDelete }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  const selectAllRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!selectAllRef.current) return
+    selectAllRef.current.indeterminate = selectedIds.size > 0 && selectedIds.size < traits.length
+  }, [selectedIds.size, traits.length])
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -51,20 +63,47 @@ export function TraitList({ traits, onReorder, onEdit, onDelete }: Props) {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={traits.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-1.5">
-          {traits.map((trait, i) => (
-            <TraitCard
-              key={trait.id}
-              trait={trait}
-              index={i}
-              onEdit={() => onEdit(trait)}
-              onDelete={() => onDelete(trait.id)}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+    <div>
+      {/* Selection header */}
+      <div className="flex items-center gap-3 mb-1.5 px-3 py-1">
+        <input
+          ref={selectAllRef}
+          type="checkbox"
+          checked={selectedIds.size === traits.length}
+          onChange={onSelectAll}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 accent-blue-600 flex-shrink-0"
+          aria-label="Select all traits"
+        />
+        <span className="text-xs text-gray-500 select-none">
+          {selectedIds.size > 0 ? `${selectedIds.size} of ${traits.length} selected` : 'Select all'}
+        </span>
+        {selectedIds.size > 0 && (
+          <button
+            onClick={onBulkDelete}
+            className="ml-auto text-xs font-medium text-red-600 hover:text-red-800 rounded px-2 py-0.5 hover:bg-red-50 transition-colors"
+          >
+            Delete {selectedIds.size} trait{selectedIds.size !== 1 ? 's' : ''}
+          </button>
+        )}
+      </div>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={traits.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-1.5">
+            {traits.map((trait, i) => (
+              <TraitCard
+                key={trait.id}
+                trait={trait}
+                index={i}
+                isSelected={selectedIds.has(trait.id)}
+                onEdit={() => onEdit(trait)}
+                onDelete={() => onDelete(trait.id)}
+                onToggleSelect={() => onToggleSelect(trait.id)}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
   )
 }

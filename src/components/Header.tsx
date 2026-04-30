@@ -3,13 +3,15 @@ import { useRef } from 'react'
 interface Props {
   traitCount: number
   onLoad: (content: string, filename: string) => void
+  onLoadCO: (file: File) => void
   onExport: () => void
   onNew: () => void
   onAddTrait: () => void
 }
 
-export function Header({ traitCount, onLoad, onExport, onNew, onAddTrait }: Props) {
+export function Header({ traitCount, onLoad, onLoadCO, onExport, onNew, onAddTrait }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const coFileRef = useRef<HTMLInputElement>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -19,6 +21,13 @@ export function Header({ traitCount, onLoad, onExport, onNew, onAddTrait }: Prop
       onLoad(reader.result as string, file.name)
     }
     reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  function handleCOFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    onLoadCO(file)
     e.target.value = ''
   }
 
@@ -47,7 +56,7 @@ export function Header({ traitCount, onLoad, onExport, onNew, onAddTrait }: Prop
           onClick={() => fileRef.current?.click()}
           className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
         >
-          Load File
+          Load .trt
         </button>
         <input
           ref={fileRef}
@@ -55,6 +64,21 @@ export function Header({ traitCount, onLoad, onExport, onNew, onAddTrait }: Prop
           accept=".trt,.csv,.json"
           className="hidden"
           onChange={handleFileChange}
+        />
+
+        <button
+          onClick={() => coFileRef.current?.click()}
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          title="Import traits from a Crop Ontology (CO) trait dictionary Excel file"
+        >
+          Import CO
+        </button>
+        <input
+          ref={coFileRef}
+          type="file"
+          accept=".xlsx"
+          className="hidden"
+          onChange={handleCOFileChange}
         />
 
         <button

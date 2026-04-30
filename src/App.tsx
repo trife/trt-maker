@@ -5,6 +5,7 @@ import { TraitList } from './components/TraitList'
 import { TraitFormModal } from './components/TraitFormModal'
 import { parseTrt } from './utils/trtParser'
 import { downloadTrt } from './utils/trtExporter'
+import { parseCO } from './utils/coImporter'
 
 let idSeq = 0
 function newId() {
@@ -13,6 +14,7 @@ function newId() {
 
 export function App() {
   const [traits, setTraits] = useState<Trait[]>([])
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTrait, setEditingTrait] = useState<Trait | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -36,16 +38,45 @@ export function App() {
         return
       }
       setTraits(loaded)
+      setSelectedIds(new Set())
       showToast(`Loaded ${loaded.length} trait(s) from ${filename}`)
     } catch {
       showToast('Failed to parse file. Make sure it is a valid .trt (JSON or CSV) file.')
     }
   }
 
+  function handleLoadCO(file: File) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const loaded = parseCO(reader.result as ArrayBuffer)
+        if (loaded.length === 0) {
+          showToast('No valid traits found in CO file.')
+          return
+        }
+        if (
+          traits.length > 0 &&
+          !window.confirm(
+            `Replace the current ${traits.length} trait(s) with the ${loaded.length} trait(s) from "${file.name}"?`,
+          )
+        ) {
+          return
+        }
+        setTraits(loaded)
+        setSelectedIds(new Set())
+        showToast(`Imported ${loaded.length} trait(s) from ${file.name}`)
+      } catch {
+        showToast('Failed to parse CO file. Make sure it is a valid Crop Ontology Excel file.')
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
   function handleNew() {
     if (traits.length === 0) return
     if (!window.confirm('Clear all traits and start fresh?')) return
     setTraits([])
+    setSelectedIds(new Set())
   }
 
   function handleAddTrait() {
@@ -58,8 +89,36 @@ export function App() {
     setModalOpen(true)
   }
 
+  function handleToggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function handleSelectAll() {
+    if (selectedIds.size === traits.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(traits.map((t) => t.id)))
+    }
+  }
+
   function handleDelete(id: string) {
+    const trait = traits.find((t) => t.id === id)
+    if (!trait) return
+    if (!window.confirm(`Delete trait "${trait.name}"?`)) return
     setTraits((prev) => prev.filter((t) => t.id !== id))
+    setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next })
+  }
+
+  function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`Delete ${selectedIds.size} selected trait${selectedIds.size !== 1 ? 's' : ''}?`)) return
+    setTraits((prev) => prev.filter((t) => !selectedIds.has(t.id)))
+    setSelectedIds(new Set())
   }
 
   function handleSave(data: Omit<Trait, 'id'>) {
@@ -86,6 +145,7 @@ export function App() {
       <Header
         traitCount={traits.length}
         onLoad={handleLoad}
+        onLoadCO={handleLoadCO}
         onExport={() => downloadTrt(traits)}
         onNew={handleNew}
         onAddTrait={handleAddTrait}
@@ -103,9 +163,13 @@ export function App() {
 
         <TraitList
           traits={traits}
+          selectedIds={selectedIds}
           onReorder={setTraits}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
+          onBulkDelete={handleBulkDelete}
         />
       </main>
 
