@@ -1,4 +1,4 @@
-import type { Trait, TraitJson, FormatType } from '../types/trait'
+import type { Trait, TraitJson, TraitAttributes, FormatType } from '../types/trait'
 import { FORMAT_TYPES } from '../types/trait'
 
 let idCounter = 0
@@ -6,8 +6,27 @@ function nextId(): string {
   return `trait-${++idCounter}`
 }
 
+const BOOL_ATTRS: (keyof TraitAttributes)[] = [
+  'mathSymbolsEnabled', 'allowInvalidValues', 'allowMulticat', 'allowOther',
+  'categoryDisplayValue', 'closeKeyboardOnOpen', 'useDayOfYear', 'cropImage',
+  'saveImage', 'repeatedMeasure', 'autoSwitchPlot', 'attachPhoto', 'attachVideo',
+  'attachAudio',
+]
+
+function normalizeAttributes(attrs: TraitAttributes | undefined): TraitAttributes | undefined {
+  if (!attrs) return attrs
+  const normalized = { ...attrs }
+  for (const key of BOOL_ATTRS) {
+    const val = normalized[key]
+    if (typeof val === 'string') {
+      (normalized as Record<string, unknown>)[key] = val.toLowerCase() !== 'false'
+    }
+  }
+  return normalized
+}
+
 function toTrait(json: TraitJson): Trait {
-  return { ...json, id: nextId() }
+  return { ...json, id: nextId(), attributes: normalizeAttributes(json.attributes) }
 }
 
 function isValidFormat(f: string): f is FormatType {
