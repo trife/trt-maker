@@ -23,12 +23,13 @@ interface Props {
   onReorder: (traits: Trait[]) => void
   onEdit: (trait: Trait) => void
   onDelete: (id: string) => void
+  onDuplicate: (id: string) => void
   onToggleSelect: (id: string) => void
   onSelectAll: () => void
   onBulkDelete: () => void
 }
 
-export function TraitList({ traits, selectedIds, onReorder, onEdit, onDelete, onToggleSelect, onSelectAll, onBulkDelete }: Props) {
+export function TraitList({ traits, selectedIds, onReorder, onEdit, onDelete, onDuplicate, onToggleSelect, onSelectAll, onBulkDelete }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -98,6 +99,7 @@ export function TraitList({ traits, selectedIds, onReorder, onEdit, onDelete, on
                 isSelected={selectedIds.has(trait.id)}
                 onEdit={() => onEdit(trait)}
                 onDelete={() => onDelete(trait.id)}
+                onDuplicate={() => onDuplicate(trait.id)}
                 onToggleSelect={() => onToggleSelect(trait.id)}
               />
             ))}

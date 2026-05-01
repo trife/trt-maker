@@ -28,10 +28,11 @@ interface Props {
   isSelected: boolean
   onEdit: () => void
   onDelete: () => void
+  onDuplicate: () => void
   onToggleSelect: () => void
 }
 
-export function TraitCard({ trait, index, isSelected, onEdit, onDelete, onToggleSelect }: Props) {
+export function TraitCard({ trait, index, isSelected, onEdit, onDelete, onDuplicate, onToggleSelect }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: trait.id })
 
   const style = {
@@ -96,6 +97,16 @@ export function TraitCard({ trait, index, isSelected, onEdit, onDelete, onToggle
 
       {/* Actions */}
       <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={onDuplicate}
+          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          title="Duplicate"
+        >
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </button>
         <button
           onClick={onEdit}
           className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"

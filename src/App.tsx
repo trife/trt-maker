@@ -106,6 +106,25 @@ export function App() {
     }
   }
 
+  function handleDuplicate(id: string) {
+    const trait = traits.find((t) => t.id === id)
+    if (!trait) return
+    const existingNames = traits.map((t) => t.name)
+    const base = trait.name.replace(/ \(\d+\)$/, '')
+    let candidate = ''
+    for (let i = 1; ; i++) {
+      candidate = `${base} (${i})`
+      if (!existingNames.includes(candidate)) break
+    }
+    const duplicate: Trait = { ...trait, id: newId(), name: candidate }
+    setTraits((prev) => {
+      const idx = prev.findIndex((t) => t.id === id)
+      const next = [...prev]
+      next.splice(idx + 1, 0, duplicate)
+      return next
+    })
+  }
+
   function handleDelete(id: string) {
     const trait = traits.find((t) => t.id === id)
     if (!trait) return
@@ -167,6 +186,7 @@ export function App() {
           onReorder={setTraits}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
           onToggleSelect={handleToggleSelect}
           onSelectAll={handleSelectAll}
           onBulkDelete={handleBulkDelete}
