@@ -67,6 +67,15 @@ export function NumericFields({ attrs, onChange }: Props) {
           />
           Allow values outside min/max
         </label>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            className="rounded text-green-600"
+            checked={attrs.mathSymbolsEnabled ?? true}
+            onChange={(e) => set({ mathSymbolsEnabled: e.target.checked })}
+          />
+          Enable math symbols
+        </label>
       </div>
     </div>
   )
