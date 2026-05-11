@@ -4,12 +4,13 @@ interface Props {
   traitCount: number
   onLoad: (content: string, filename: string) => void
   onLoadCO: (file: File) => void
+  onOpenBrapi: () => void
   onExport: () => void
   onNew: () => void
   onAddTrait: () => void
 }
 
-export function Header({ traitCount, onLoad, onLoadCO, onExport, onNew, onAddTrait }: Props) {
+export function Header({ traitCount, onLoad, onLoadCO, onOpenBrapi, onExport, onNew, onAddTrait }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const coFileRef = useRef<HTMLInputElement>(null)
 
@@ -80,6 +81,14 @@ export function Header({ traitCount, onLoad, onLoadCO, onExport, onNew, onAddTra
           className="hidden"
           onChange={handleCOFileChange}
         />
+
+        <button
+          onClick={onOpenBrapi}
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          title="Import traits from a BrAPI-compatible server"
+        >
+          Import BrAPI
+        </button>
 
         <button
           onClick={onExport}

@@ -3,6 +3,7 @@ import type { Trait } from './types/trait'
 import { Header } from './components/Header'
 import { TraitList } from './components/TraitList'
 import { TraitFormModal } from './components/TraitFormModal'
+import { BrapiModal } from './components/BrapiModal'
 import { parseTrt } from './utils/trtParser'
 import { downloadTrt } from './utils/trtExporter'
 import { parseCO } from './utils/coImporter'
@@ -17,6 +18,7 @@ export function App() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTrait, setEditingTrait] = useState<Trait | null>(null)
+  const [brapiModalOpen, setBrapiModalOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   function showToast(msg: string) {
@@ -70,6 +72,23 @@ export function App() {
       }
     }
     reader.readAsArrayBuffer(file)
+  }
+
+  function handleBrapiImport(imported: Trait[]) {
+    const existingLower = new Set(traits.map((t) => t.name.toLowerCase()))
+    const newTraits = imported.filter((t) => !existingLower.has(t.name.toLowerCase()))
+    if (newTraits.length === 0) {
+      showToast('All selected traits already exist.')
+    } else {
+      setTraits((prev) => [...prev, ...newTraits])
+      const skipped = imported.length - newTraits.length
+      showToast(
+        skipped > 0
+          ? `Imported ${newTraits.length} trait(s). ${skipped} skipped (duplicates).`
+          : `Imported ${newTraits.length} trait(s) from BrAPI server.`,
+      )
+    }
+    setBrapiModalOpen(false)
   }
 
   function handleNew() {
@@ -165,6 +184,7 @@ export function App() {
         traitCount={traits.length}
         onLoad={handleLoad}
         onLoadCO={handleLoadCO}
+        onOpenBrapi={() => setBrapiModalOpen(true)}
         onExport={() => downloadTrt(traits)}
         onNew={handleNew}
         onAddTrait={handleAddTrait}
@@ -192,6 +212,14 @@ export function App() {
           onBulkDelete={handleBulkDelete}
         />
       </main>
+
+      {brapiModalOpen && (
+        <BrapiModal
+          existingTraitNames={traits.map((t) => t.name)}
+          onImport={handleBrapiImport}
+          onClose={() => setBrapiModalOpen(false)}
+        />
+      )}
 
       {modalOpen && (
         <TraitFormModal
